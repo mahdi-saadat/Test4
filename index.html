@@ -140,6 +140,7 @@
         function mohrCoulomb(sig3, sigma_3, sigC, m, s, a) {
             const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
             const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
+            const phi = (2 * Math.atan(Math.sqrt(nfi)) - Math.PI / 2) * (180 / Math.PI);
             return nfi * sig3 + 2 * c * Math.sqrt(nfi);
         }
 
@@ -174,7 +175,7 @@
 
             // Update results display
             document.getElementById("hbParams").innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
-            document.getElementById("mcParams").innerText = `sigt = ${sigt.toFixed(2)} MPa, σ3 = ${sigma_3.toFixed(2)} MPa`;
+            document.getElementById("mcParams").innerText = `Cohesion = ${c.toFixed(2)} MPa, Friction Angle = ${phi.toFixed(2)} deg`;
 
             // Destroy and redraw the chart
             if (chart) chart.destroy();
