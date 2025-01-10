@@ -3,35 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slider Example</title>
+    <title>Ground Support Density Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <h2>Ground Support Density Calculator</h2>
 
-    <label for="aValue">Select A:</label>
-    <input type="range" id="aValue" name="aValue" min="0" max="200" value="50">
-    <span id="aValueDisplay">50</span>
+    <!-- Slider for 'a' -->
+    <label for="sliderA">a:</label>
+    <input type="range" id="sliderA" min="0" max="100" step="1" value="50">
+    <span id="valueA">50</span> <!-- Display value of a -->
 
     <br><br>
 
-    <label for="bValue">Select B:</label>
-    <input type="range" id="bValue" name="bValue" min="0" max="200" value="50">
-    <span id="bValueDisplay">50</span>
+    <!-- Slider for 'b' -->
+    <label for="sliderB">b:</label>
+    <input type="range" id="sliderB" min="0" max="100" step="1" value="50">
+    <span id="valueB">50</span> <!-- Display value of b -->
 
-    <script>
-        const aSlider = document.getElementById("aValue");
-        const bSlider = document.getElementById("bValue");
-        const aDisplay = document.getElementById("aValueDisplay");
-        const bDisplay = document.getElementById("bValueDisplay");
+    <br><br>
 
-        // Update the display when slider values change
-        aSlider.oninput = function() {
-            aDisplay.textContent = aSlider.value;
-        }
+    <!-- Display results -->
+    <button onclick="calculateResult()">Calculate</button>
+    <p id="result"></p>
 
-        bSlider.oninput = function() {
-            bDisplay.textContent = bSlider.value;
+    <script type="text/javascript">
+        // Get sliders and values display elements
+        const sliderA = document.getElementById('sliderA');
+        const valueA = document.getElementById('valueA');
+        const sliderB = document.getElementById('sliderB');
+        const valueB = document.getElementById('valueB');
+        
+        // Update the displayed value when sliders are moved
+        sliderA.addEventListener('input', function() {
+            valueA.textContent = sliderA.value;
+        });
+
+        sliderB.addEventListener('input', function() {
+            valueB.textContent = sliderB.value;
+        });
+
+        // Calculate result using the slider values
+        function calculateResult() {
+            const a = parseInt(sliderA.value);
+            const b = parseInt(sliderB.value);
+            
+            // Simple example formula
+            const result = a * b;  // Replace with your actual calculation logic
+            
+            document.getElementById('result').innerText = 'Result: ' + result;
         }
     </script>
-
 </body>
 </html>
