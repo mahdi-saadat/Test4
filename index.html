@@ -13,9 +13,10 @@
         .input-group {
             margin-bottom: 10px;
         }
-        canvas {
-            width: 50px;
-            height: 200px;
+        #failurePlotDiv {
+            width: 640px; /* 8 inches in width (800px ≈ 8 inches at 100dpi) */
+            height: 640px; /* 8 inches in height */
+            margin: 0 auto; /* Center the plot */
         }
         #parameters, #results {
             margin-top: 20px;
@@ -61,7 +62,9 @@
     </div>
 
     <h2>Plot</h2>
-    <canvas id="failurePlot"></canvas>
+    <div id="failurePlotDiv">
+        <canvas id="failurePlot"></canvas>
+    </div>
 
     <script>
         // Initialization
@@ -87,6 +90,11 @@
             const c = (1 / (2 * Math.sqrt(nfi))) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
             const sigma_cm = 2 * c * Math.sqrt(nfi);
             return { nfi, phi, c, sigma_cm };
+        }
+
+        // Function to round number properly for tick labels
+        function integerTickFormatter(value) {
+            return Math.round(value).toString(); // Round to nearest integer, then convert to string
         }
 
         // Update calculations and plot
@@ -130,15 +138,27 @@
                 data: {
                     labels: sig3Values, // X-axis labels (σ3 values)
                     datasets: [
-                        { label: 'Hoek-Brown', data: sig1HB, borderColor: 'red', fill: false },
-                        { label: 'Mohr-Coulomb', data: sig1MC, borderColor: 'blue', fill: false }
+                        { label: 'Hoek-Brown', data: sig1HB, borderColor: 'red', borderWidth: 2, fill: false, tension: 0 },
+                        { label: 'Mohr-Coulomb', data: sig1MC, borderColor: 'blue', borderWidth: 2, fill: false, tension: 0 }
                     ]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false, // Fixed size (8x8 inches in CSS)
                     scales: {
-                        x: { title: { display: true, text: 'σ3 (MPa)' } },
-                        y: { title: { display: true, text: 'σ1 (MPa)' } }
+                        x: {
+                            title: { display: true, text: 'σ3 (MPa)' },
+                            ticks: {
+                                callback: integerTickFormatter, // Disable decimals
+                                stepSize: 2, // Adjust step size if needed
+                                min: 0 // Ensure x-axis starts from 0
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'σ1 (MPa)' },
+                            ticks: {
+                                callback: integerTickFormatter // Disable decimals
+                            }
+                        }
                     }
                 }
             });
