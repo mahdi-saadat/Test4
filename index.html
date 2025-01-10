@@ -14,9 +14,13 @@
             margin-bottom: 10px;
         }
         #failurePlotDiv {
-            width: 640px; /* 8 inches in width (800px ≈ 8 inches at 100dpi) */
-            height: 640px; /* 8 inches in height */
+            width: 100%; /* Dynamic width to fit the container */
             margin: 0 auto; /* Center the plot */
+        }
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto; /* Maintain aspect ratio */
         }
         #parameters, #results {
             margin-top: 20px;
@@ -143,20 +147,20 @@
                     ]
                 },
                 options: {
-                    responsive: false, // Fixed size (8x8 inches in CSS)
+                    responsive: true, // Responsive and dynamic sizing
+                    maintainAspectRatio: false,
                     scales: {
                         x: {
                             title: { display: true, text: 'σ3 (MPa)' },
                             ticks: {
-                                callback: integerTickFormatter, // Disable decimals
-                                stepSize: 2, // Adjust step size if needed
-                                min: 0 // Ensure x-axis starts from 0
+                                callback: integerTickFormatter, // No decimals on labels
                             }
                         },
                         y: {
                             title: { display: true, text: 'σ1 (MPa)' },
+                            min: 0, // No negative y-axis values
                             ticks: {
-                                callback: integerTickFormatter // Disable decimals
+                                callback: integerTickFormatter // No decimals on labels
                             }
                         }
                     }
