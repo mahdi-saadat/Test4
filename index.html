@@ -103,98 +103,99 @@
     </div>
 
     <script>
-        // Initialize chart variables
+        // Initialization
         let chart = null;
 
-        // Hoek-Brown failure criterion calculation function
+        // Correct sigma_3 calculation (overburden pressure)
+        function calculateSigma3(density, depth) {
+        return density * depth;
+        }
+
+        // Tensile strength (sigt) calculation
+        function calculateTensileStrength(UCSi, mb, s) {
+        return -s * (UCSi / mb); // Align with Python's calculation
+        }
+
+        // Generate sig3 (σ3) values for plotting
+        function generateSigma3Values(sigt, expansionRatio, sigma_3, steps) {
+        const range = [];
+        const increment = (expansionRatio * sigma_3 - sigt) / steps; // Divide range into step increments
+        for (let i = 0; i <= steps; i++) {
+        range.push(sigt + i * increment);
+        }
+        return range;
+        }
+
+        // Updated Hoek-Brown Calculation
         function hoekBrown(sig3, sigC, m, s, a) {
-            return sig3 + sigC * Math.pow(m * (sig3 / sigC) + s, a);
+        return sig3 + sigC * Math.pow(m * (sig3 / sigC) + s, a);
         }
 
-        // Mohr-Coulomb failure criterion calculation function
+        // Updated Mohr-Coulomb Calculation
         function mohrCoulomb(sig3, sigma_3, sigC, m, s, a) {
-            const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
-            const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
-            return nfi * sig3 + 2 * c * Math.sqrt(nfi);
+        const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
+        const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
+        return nfi * sig3 + 2 * c * Math.sqrt(nfi);
         }
 
-        // Calculate cohesion (c), friction angle (phi), and rock strength
-        function sigma_cm_and_c_and_phi(sigma_3, sigC, m, s, a) {
-            const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
-            const phi = ((2 * Math.atan(Math.sqrt(nfi))) - Math.PI / 2) * (180 / Math.PI); // Degrees
-            const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
-            const sigma_cm = 2 * c * Math.sqrt(nfi);
-            return { nfi, phi, c, sigma_cm };
-        }
-
-        // Formatter for integer tick labels
-        function integerTickFormatter(value) {
-            return Math.round(value).toString(); // Convert to nearest integer
-        }
-
-        // Run calculations and update the plot
+        // Run calculations and add corrected ranges
         function runCalculations() {
-            // Retrieve user inputs
-            const UCSi = parseFloat(document.getElementById("UCSi").value);
-            const GSI = parseFloat(document.getElementById("GSI").value);
-            const mi = parseFloat(document.getElementById("mi").value);
-            const D = parseFloat(document.getElementById("D").value);
-            const density = parseFloat(document.getElementById("density").value);
-            const depth = parseFloat(document.getElementById("depth").value);
-            const sigma_3 = density * depth;
+        // Retrieve user inputs
+        const UCSi = parseFloat(document.getElementById("UCSi").value);
+        const GSI = parseFloat(document.getElementById("GSI").value);
+        const mi = parseFloat(document.getElementById("mi").value);
+        const D = parseFloat(document.getElementById("D").value);
+        const density = parseFloat(document.getElementById("density").value);
+        const depth = parseFloat(document.getElementById("depth").value);
 
-            // Calculate Hoek-Brown parameters
-            const mb = mi * Math.exp((GSI - 100) / 28 - 14 * D);
-            const s = Math.exp((GSI - 100) / 9 - 3 * D);
-            const a = 0.5 + (1 / 6) * (Math.exp(-GSI / 15) - Math.exp(-20 / 3));
+        // Overburden pressure as sigma_3
+        const sigma_3 = calculateSigma3(density, depth);
 
-            // Calculate Mohr-Coulomb parameters
-            const mcResults = sigma_cm_and_c_and_phi(sigma_3, UCSi, mb, s, a);
+        // Calculate Hoek-Brown parameters
+        const mb = mi * Math.exp((GSI - 100) / 28 - 14 * D);
+        const s = Math.exp((GSI - 100) / 9 - 3 * D);
+        const a = 0.5 + (1 / 6) * (Math.exp(-GSI / 15) - Math.exp(-20 / 3));
 
-            // Update results
-            document.getElementById("hbParams").innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
-            document.getElementById("mcParams").innerText = `Cohesion (c): ${mcResults.c.toFixed(2)} MPa, Friction Angle (phi): ${mcResults.phi.toFixed(2)}°`;
+        // Tensile strength (sigt)
+        const sigt = calculateTensileStrength(UCSi, mb, s);
 
-            // Prepare data arrays for plotting
-            const sig3Values = [];
-            const sig1HB = [];
-            const sig1MC = [];
+        // Sigma3 values for plotting (range from sigt to 1.2 * sigma_3)
+        const sig3ValuesHB = generateSigma3Values(sigt, 1.2, sigma_3, 500);
+        const sig3ValuesMC = [...sig3ValuesHB]; // Sharing the same set of sigma_3 points
 
-            for (let sig3 = -UCSi / mb; sig3 <= 1.2 * sigma_3; sig3 += 0.1) {
-                sig3Values.push(sig3);
-                sig1HB.push(hoekBrown(sig3, UCSi, mb, s, a));
-                sig1MC.push(mohrCoulomb(sig3, sigma_3, UCSi, mb, s, a));
-            }
+        // Calculate sig1 values
+        const sig1HB = sig3ValuesHB.map(sig3 => hoekBrown(sig3, UCSi, mb, s, a));
+        const sig1MC = sig3ValuesMC.map(sig3 => mohrCoulomb(sig3, sigma_3, UCSi, mb, s, a));
 
-            // Destroy and redraw the chart
-            if (chart) chart.destroy();
-            chart = new Chart(document.getElementById("failurePlot").getContext("2d"), {
-                type: "line",
-                data: {
-                    labels: sig3Values,
-                    datasets: [
-                        { label: "Hoek-Brown", data: sig1HB, borderColor: "red", borderWidth: 2, fill: false, tension: 0 },
-                        { label: "Mohr-Coulomb", data: sig1MC, borderColor: "blue", borderWidth: 2, fill: false, tension: 0 }
-                    ]
+        // Update results display
+        document.getElementById("hbParams").innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
+        document.getElementById("mcParams").innerText = `sigt = ${sigt.toFixed(2)} MPa, σ3 = ${sigma_3.toFixed(2)} MPa`;
+
+        // Destroy and redraw the chart
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById("failurePlot").getContext("2d"), {
+        type: "line",
+        data: {
+            labels: sig3ValuesHB,
+            datasets: [
+                { label: "Hoek-Brown", data: sig1HB, borderColor: "red", borderWidth: 2, fill: false },
+                { label: "Mohr-Coulomb", data: sig1MC, borderColor: "blue", borderWidth: 2, fill: false }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: "σ3 (MPa)" }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        x: {
-                            title: { display: true, text: "σ3 (MPa)" },
-                            ticks: { callback: integerTickFormatter },
-                        },
-                        y: {
-                            title: { display: true, text: "σ1 (MPa)" },
-                            min: 0,
-                            ticks: { callback: integerTickFormatter },
-                        }
-                    }
+                y: {
+                    title: { display: true, text: "σ1 (MPa)" }
                 }
-            });
+            }
         }
-
+        });
+        }
         // Perform initial calculations on page load
         runCalculations();
     </script>
