@@ -25,8 +25,8 @@
 
     <!-- Display results -->
     <button onclick="calculateResult()">Calculate</button>
-    <p id="Multiply is">Multiply is: : </p>
-    <p id="resultC">Sum is: : </p> <!-- Add this line to display c -->
+    <p id="resultMultiply">Multiply is: </p> <!-- Corrected id -->
+    <p id="resultC">Sum is: </p> <!-- Add this line to display c -->
 
     <script type="text/javascript">
         // Get sliders and values display elements
@@ -49,15 +49,15 @@
             const a = parseInt(sliderA.value);
             const b = parseInt(sliderB.value);
             
-            // Example calculation for c
-            const c = a + b;  // Change this formula as needed
-            
-            // Display the result of c
+            // Calculate sum
+            const c = a + b;
+            // Display the result of sum
             document.getElementById('resultC').innerText = 'Sum is: ' + c;
 
-            // If you want to calculate the final result (e.g., ground support density)
-            const result = a * b;  // Example calculation, replace with your actual logic
-            document.getElementById('result').innerText = 'Multiply is: ' + result;
+            // Calculate multiplication
+            const result = a * b;
+            // Display the result of multiplication
+            document.getElementById('resultMultiply').innerText = 'Multiply is: ' + result;
         }
     </script>
 </body>
