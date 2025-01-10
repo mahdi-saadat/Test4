@@ -104,6 +104,7 @@
 
     <script>
         // Initialization
+        // Initialization
         let chart = null;
 
         // Function to calculate sigma3 (overburden pressure)
@@ -137,10 +138,7 @@
         }
 
         // Mohr-Coulomb calculation
-        function mohrCoulomb(sig3, sigma_3, sigC, m, s, a) {
-            const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
-            const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
-            const phi = (2 * Math.atan(Math.sqrt(nfi)) - Math.PI / 2) * (180 / Math.PI);
+        function mohrCoulomb(sig3, nfi, c) {
             return nfi * sig3 + 2 * c * Math.sqrt(nfi);
         }
 
@@ -169,9 +167,14 @@
             // Simplify the x-axis data points for better rendering
             const reducedSig3Values = reduceData(sig3Values, 10);
 
+            // Calculate nfi, cohesion (c), and friction angle (phi) for Mohr-Coulomb
+            const nfi = 1 + a * mb * Math.pow(mb * (sigma_3 / UCSi) + s, a - 1);
+            const c = (1 / (2 * Math.sqrt(nfi))) * (((1 - nfi) * sigma_3) + (UCSi * Math.pow(mb * (sigma_3 / UCSi) + s, a)));
+            const phi = (2 * Math.atan(Math.sqrt(nfi)) - Math.PI / 2) * (180 / Math.PI);
+
             // Calculate sig1 values
             const sig1HB = reducedSig3Values.map(sig3 => hoekBrown(sig3, UCSi, mb, s, a));
-            const sig1MC = reducedSig3Values.map(sig3 => mohrCoulomb(sig3, sigma_3, UCSi, mb, s, a));
+            const sig1MC = reducedSig3Values.map(sig3 => mohrCoulomb(sig3, nfi, c));
 
             // Update results display
             document.getElementById("hbParams").innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
@@ -196,14 +199,7 @@
                     scales: {
                         x: {
                             title: { display: true, text: "σ3 (MPa)", font: { size: 14, weight: "bold" } },
-                            ticks: {
-                                autoSkip: true,
-                                maxTicksLimit: 15,
-                                font: { size: 12 },
-                                callback: function(value, index, values) {
-                                    return Math.round(value);  // Ensure tick values are integers
-                                }
-                            },
+                            ticks: { autoSkip: true, maxTicksLimit: 15, font: { size: 12 } },
                             grid: { color: "#e0e0e0" }
                         },
                         y: {
