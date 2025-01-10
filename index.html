@@ -25,7 +25,8 @@
 
     <!-- Display results -->
     <button onclick="calculateResult()">Calculate</button>
-    <p id="result"></p>
+    <p id="result">Result: </p>
+    <p id="resultC">c: </p> <!-- Add this line to display c -->
 
     <script type="text/javascript">
         // Get sliders and values display elements
@@ -48,9 +49,14 @@
             const a = parseInt(sliderA.value);
             const b = parseInt(sliderB.value);
             
-            // Simple example formula
-            const result = a * b;  // Replace with your actual calculation logic
+            // Example calculation for c
+            const c = a + b;  // Change this formula as needed
             
+            // Display the result of c
+            document.getElementById('resultC').innerText = 'c: ' + c;
+
+            // If you want to calculate the final result (e.g., ground support density)
+            const result = a * b;  // Example calculation, replace with your actual logic
             document.getElementById('result').innerText = 'Result: ' + result;
         }
     </script>
