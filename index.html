@@ -3,62 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ground Support Density Calculator</title>
+    <title>Hoek-Brown vs Mohr-Coulomb Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        canvas {
+            max-width: 100%;
+            height: 400px;
+        }
+        #parameters {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Ground Support Density Calculator</h2>
+    <h1>Hoek-Brown vs Mohr-Coulomb Calculator</h1>
 
-    <!-- Slider for 'a' -->
-    <label for="sliderA">a:</label>
-    <input type="range" id="sliderA" min="0" max="100" step="1" value="50">
-    <span id="valueA">50</span> <!-- Display value of a -->
+    <div>
+        <h2>Input Parameters</h2>
+        <div class="input-group">
+            <label for="UCSi">Uniaxial Compressive Strength (UCSi, MPa): </label>
+            <input type="number" id="UCSi" value="10" step="0.1">
+        </div>
+        <div class="input-group">
+            <label for="GSI">Geological Strength Index (GSI): </label>
+            <input type="number" id="GSI" value="50" step="0.1">
+        </div>
+        <div class="input-group">
+            <label for="mi">mi: </label>
+            <input type="number" id="mi" value="10" step="0.1">
+        </div>
+        <div class="input-group">
+            <label for="D">Disturbance Factor (D): </label>
+            <input type="number" id="D" value="0" step="0.1" min="0" max="1">
+        </div>
+        <div class="input-group">
+            <label for="density">Rock Density (MN/m³): </label>
+            <input type="number" id="density" value="0.025" step="0.001">
+        </div>
+        <div class="input-group">
+            <label for="depth">Depth (m): </label>
+            <input type="number" id="depth" value="150" step="1">
+        </div>
+        <button onclick="runCalculations()">Calculate and Update Plot</button>
+    </div>
 
-    <br><br>
+    <h2>Results</h2>
+    <p><strong>Hoek-Brown Parameters:</strong> <span id="hbParams"></span></p>
+    <p><strong>Mohr-Coulomb Parameters:</strong> <span id="mcParams"></span></p>
 
-    <!-- Slider for 'b' -->
-    <label for="sliderB">b:</label>
-    <input type="range" id="sliderB" min="0" max="100" step="1" value="50">
-    <span id="valueB">50</span> <!-- Display value of b -->
+    <h2>Plot</h2>
+    <canvas id="failurePlot"></canvas>
 
-    <br><br>
+    <script>
+        // Initialization
+        const ctx = document.getElementById('failurePlot').getContext('2d');
+        let chart = null;
 
-    <!-- Display results -->
-    <button onclick="calculateResult()">Calculate</button>
-    <p id="resultMultiply">Multiply is: </p> <!-- Corrected id -->
-    <p id="resultC">Sum is: </p> <!-- Add this line to display c -->
-
-    <script type="text/javascript">
-        // Get sliders and values display elements
-        const sliderA = document.getElementById('sliderA');
-        const valueA = document.getElementById('valueA');
-        const sliderB = document.getElementById('sliderB');
-        const valueB = document.getElementById('valueB');
-        
-        // Update the displayed value when sliders are moved
-        sliderA.addEventListener('input', function() {
-            valueA.textContent = sliderA.value;
-        });
-
-        sliderB.addEventListener('input', function() {
-            valueB.textContent = sliderB.value;
-        });
-
-        // Calculate result using the slider values
-        function calculateResult() {
-            const a = parseInt(sliderA.value);
-            const b = parseInt(sliderB.value);
-            
-            // Calculate sum
-            const c = a + b;
-            // Display the result of sum
-            document.getElementById('resultC').innerText = 'Sum is: ' + c;
-
-            // Calculate multiplication
-            const result = a * b;
-            // Display the result of multiplication
-            document.getElementById('resultMultiply').innerText = 'Multiply is: ' + result;
+        function hoekBrown(sig3, sigC, m, s, a) {
+            return sig3 + sigC * Math.pow(m * (sig3 / sigC) + s, a);
         }
+
+        function mohrCoulomb(sig3, sigma_3, sigC, m, s, a) {
+            const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
+            const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
+            return nfi * sig3 + 2 * c * Math.sqrt(nfi);
+        }
+
+        function runCalculations() {
+            // Gather inputs
+            const UCSi = parseFloat(document.getElementById('UCSi').value);
+            const GSI = parseFloat(document.getElementById('GSI').value);
+            const mi = parseFloat(document.getElementById('mi').value);
+            const D = parseFloat(document.getElementById('D').value);
+            const density = parseFloat(document.getElementById('density').value);
+            const depth = parseFloat(document.getElementById('depth').value);
+            const sigma_3 = density * depth;
+
+            // Calculate HB parameters mb, s, a
+            const mb = mi * Math.exp((GSI - 100) / 28 - 14 * D);
+            const s = Math.exp((GSI - 100) / 9 - 3 * D);
+            const a = 0.5 + 1 / 6 * (Math.exp(-GSI / 15.0) - Math.exp(-20.0 / 3.0));
+
+            // Update results display
+            document.getElementById('hbParams').innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
+
+            // Generate data for plotting
+            const sig3Values = [];
+            const sig1HB = [];
+            const sig1MC = [];
+
+            for (let sig3 = -UCSi / mb; sig3 <= 1.2 * sigma_3; sig3 += 0.01) {
+                sig3Values.push(sig3);
+                sig1HB.push(hoekBrown(sig3, UCSi, mb, s, a));
+                sig1MC.push(mohrCoulomb(sig3, sigma_3, UCSi, mb, s, a));
+            }
+
+            // Re-draw chart
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sig3Values,
+                    datasets: [
+                        { label: 'Hoek-Brown', data: sig1HB, borderColor: 'red', fill: false },
+                        { label: 'Mohr-Coulomb', data: sig1MC, borderColor: 'blue', fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'σ3 (MPa)' } },
+                        y: { title: { display: true, text: 'σ1 (MPa)' } }
+                    }
+                }
+            });
+        }
+
+        runCalculations();
     </script>
 </body>
 </html>
