@@ -174,26 +174,84 @@
         // Destroy and redraw the chart
         if (chart) chart.destroy();
         chart = new Chart(document.getElementById("failurePlot").getContext("2d"), {
-        type: "line",
-        data: {
-            labels: sig3ValuesHB,
-            datasets: [
-                { label: "Hoek-Brown", data: sig1HB, borderColor: "red", borderWidth: 2, fill: false },
-                { label: "Mohr-Coulomb", data: sig1MC, borderColor: "blue", borderWidth: 2, fill: false }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    title: { display: true, text: "σ3 (MPa)" }
+            type: "line",
+            data: {
+                labels: sig3ValuesHB,
+                datasets: [
+                    {
+                        label: "Hoek-Brown",
+                        data: sig1HB,
+                        borderColor: "red",
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: "Mohr-Coulomb",
+                        data: sig1MC,
+                        borderColor: "blue",
+                        borderWidth: 2,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true, // Maintain aspect ratio
+                aspectRatio: 1.5, // Aspect ratio of 1.5:1
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: "σ3 (MPa)",
+                            font: { size: 14, weight: "bold" }
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 10,
+                            font: { size: 12 }
+                        },
+                        grid: {
+                            drawOnChartArea: true,
+                            color: "#e0e0e0",
+                            lineWidth: 1
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: "σ1 (MPa)",
+                            font: { size: 14, weight: "bold" }
+                        },
+                        ticks: { font: { size: 12 } },
+                        grid: {
+                            drawOnChartArea: true,
+                            color: "#e0e0e0",
+                            lineWidth: 1
+                        }
+                    }
                 },
-                y: {
-                    title: { display: true, text: "σ1 (MPa)" }
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: "top",
+                        labels: {
+                            font: { size: 14 }
+                        }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                return `(${tooltipItem.raw.toFixed(2)}) MPa`;
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    point: { radius: 0 },
+                    line: { tension: 0.1 }
                 }
             }
-        }
         });
         }
         // Perform initial calculations on page load
