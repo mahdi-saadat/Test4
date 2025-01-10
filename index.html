@@ -208,7 +208,10 @@
                         ticks: {
                             autoSkip: true,
                             maxTicksLimit: 10,
-                            font: { size: 12 }
+                            font: { size: 12 },
+                            callback: function (value, index, values) {
+                                return Number.isInteger(value) ? value : ''; // Only display integers
+                            }
                         },
                         grid: {
                             drawOnChartArea: true,
@@ -216,6 +219,22 @@
                             lineWidth: 1
                         }
                     },
+    y: {
+        title: {
+            display: true,
+            text: "σ1 (MPa)",
+            font: { size: 14, weight: "bold" }
+        },
+        ticks: {
+            font: { size: 12 }
+        },
+        grid: {
+            drawOnChartArea: true,
+            color: "#e0e0e0",
+            lineWidth: 1
+        }
+    }
+},
                     y: {
                         title: {
                             display: true,
