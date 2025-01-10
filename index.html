@@ -6,59 +6,60 @@
     <title>Hoek-Brown vs Mohr-Coulomb Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-    /* General body styling for a clean look */
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        padding: 0;
-        box-sizing: border-box;
-    }
+        /* General page styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    /* Input groups styling */
-    .input-group {
-        margin-bottom: 10px;
-    }
+        /* Styling for input group containers */
+        .input-group {
+            margin-bottom: 10px;
+        }
 
-    /* Chart container styling */
-    #failurePlotDiv {
-        width: 100%; /* Make the container responsive */
-        max-width: 800px; /* Add a max-width to prevent stretching too far on large screens */
-        margin: 0 auto; /* Center the container horizontally */
-        padding: 10px; /* Optional padding for spacing */
-    }
+        /* Chart container styles */
+        #failurePlotDiv {
+            width: 100%;          /* Fully responsive width */
+            max-width: 800px;     /* Limit width to prevent stretching on large screens */
+            margin: 0 auto;       /* Center container horizontally */
+            padding: 10px;        /* Add some internal padding for breathing room */
+        }
 
-    /* Canvas styling for responsiveness */
-    canvas {
-        display: block; /* Ensures the canvas behaves as a block element */
-        max-width: 100%; /* Allow the chart to scale within the container */
-        height: auto; /* Maintain aspect ratio dynamically */
-    }
+        /* Canvas (chart) styling */
+        canvas {
+            display: block;       /* Block-level element for proper alignment */
+            max-width: 100%;      /* Scale the chart dynamically */
+            height: auto;         /* Maintain aspect ratio */
+        }
 
-    /* Parameters and results spacing */
-    #parameters,
-    #results {
-        margin-top: 20px;
-    }
+        /* Spacing for parameters and result sections */
+        #parameters,
+        #results {
+            margin-top: 20px;
+        }
 
-    /* Button styling for better usability */
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-        border: none;
-        cursor: pointer;
-        background-color: #007bff; /* Professional blue color */
-        color: white;
-        border-radius: 5px;
-    }
+        /* Button styling for better UX */
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            background-color: #007bff; /* Professional blue */
+            color: white;
+            border-radius: 5px;
+        }
 
-    button:hover {
-        background-color: #0056b3; /* Darker blue on hover */
-    }
-</style>
+        button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+    </style>
 </head>
 <body>
     <h1>Hoek-Brown vs Mohr-Coulomb Calculator</h1>
 
+    <!-- Input Parameters -->
     <div id="parameters">
         <h2>Input Parameters</h2>
         <div class="input-group">
@@ -88,72 +89,73 @@
         <button onclick="runCalculations()">Calculate and Update Plot</button>
     </div>
 
+    <!-- Results -->
     <div id="results">
         <h2>Results</h2>
         <p><strong>Hoek-Brown Parameters:</strong> <span id="hbParams"></span></p>
         <p><strong>Mohr-Coulomb Parameters:</strong> <span id="mcParams"></span></p>
     </div>
 
+    <!-- Plot -->
     <h2>Plot</h2>
     <div id="failurePlotDiv">
         <canvas id="failurePlot"></canvas>
     </div>
 
     <script>
-        // Initialization
-        const ctx = document.getElementById('failurePlot').getContext('2d');
+        // Initialize chart variables
         let chart = null;
 
-        // Hoek-Brown Calculation
+        // Hoek-Brown failure criterion calculation function
         function hoekBrown(sig3, sigC, m, s, a) {
             return sig3 + sigC * Math.pow(m * (sig3 / sigC) + s, a);
         }
 
-        // Mohr-Coulomb Calculation
+        // Mohr-Coulomb failure criterion calculation function
         function mohrCoulomb(sig3, sigma_3, sigC, m, s, a) {
             const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
             const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
             return nfi * sig3 + 2 * c * Math.sqrt(nfi);
         }
 
-        // Function to calculate cohesion (c), friction angle (phi), and rock strength
+        // Calculate cohesion (c), friction angle (phi), and rock strength
         function sigma_cm_and_c_and_phi(sigma_3, sigC, m, s, a) {
             const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
-            const phi = (2 * Math.atan(Math.sqrt(nfi)) - Math.PI / 2) * (180 / Math.PI); // Convert to degrees
-            const c = (1 / (2 * Math.sqrt(nfi))) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
+            const phi = ((2 * Math.atan(Math.sqrt(nfi))) - Math.PI / 2) * (180 / Math.PI); // Degrees
+            const c = 1 / (2 * Math.sqrt(nfi)) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
             const sigma_cm = 2 * c * Math.sqrt(nfi);
             return { nfi, phi, c, sigma_cm };
         }
 
-        // Function to round number properly for tick labels
+        // Formatter for integer tick labels
         function integerTickFormatter(value) {
-            return Math.round(value).toString(); // Round to nearest integer, then convert to string
+            return Math.round(value).toString(); // Convert to nearest integer
         }
 
-        // Update calculations and plot
+        // Run calculations and update the plot
         function runCalculations() {
-            // Gather user inputs
-            const UCSi = parseFloat(document.getElementById('UCSi').value);
-            const GSI = parseFloat(document.getElementById('GSI').value);
-            const mi = parseFloat(document.getElementById('mi').value);
-            const D = parseFloat(document.getElementById('D').value);
-            const density = parseFloat(document.getElementById('density').value);
-            const depth = parseFloat(document.getElementById('depth').value);
-            const sigma_3 = density * depth; // Overburden pressure
+            // Retrieve user inputs
+            const UCSi = parseFloat(document.getElementById("UCSi").value);
+            const GSI = parseFloat(document.getElementById("GSI").value);
+            const mi = parseFloat(document.getElementById("mi").value);
+            const D = parseFloat(document.getElementById("D").value);
+            const density = parseFloat(document.getElementById("density").value);
+            const depth = parseFloat(document.getElementById("depth").value);
+            const sigma_3 = density * depth;
 
-            // Calculate Hoek-Brown parameters mb, s, a
+            // Calculate Hoek-Brown parameters
             const mb = mi * Math.exp((GSI - 100) / 28 - 14 * D);
             const s = Math.exp((GSI - 100) / 9 - 3 * D);
-            const a = 0.5 + 1 / 6 * (Math.exp(-GSI / 15.0) - Math.exp(-20.0 / 3.0));
+            const a = 0.5 + (1 / 6) * (Math.exp(-GSI / 15) - Math.exp(-20 / 3));
 
-            // Calculate Mohr-Coulomb parameters (including cohesion and friction angle)
-            const mcResults = sigma_cm_and_c_and_phi(sigma_3, UCSi, mb, s, a); // {c, phi, sigma_cm, nfi}
+            // Calculate Mohr-Coulomb parameters
+            const mcResults = sigma_cm_and_c_and_phi(sigma_3, UCSi, mb, s, a);
 
-            // Update results in HTML
-            document.getElementById('hbParams').innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
-            document.getElementById('mcParams').innerText = `Cohesion (c): ${mcResults.c.toFixed(2)} MPa, Friction Angle (phi): ${mcResults.phi.toFixed(2)}°`;
+            // Update results
+            document.getElementById("hbParams").innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
+            document.getElementById("mcParams").innerText = `Cohesion (c): ${mcResults.c.toFixed(2)} MPa, Friction Angle (phi): ${mcResults.phi.toFixed(2)}°`;
 
-            // Prepare data for plotting
+            // Prepare data arrays for plotting
             const sig3Values = [];
             const sig1HB = [];
             const sig1MC = [];
@@ -164,33 +166,29 @@
                 sig1MC.push(mohrCoulomb(sig3, sigma_3, UCSi, mb, s, a));
             }
 
-            // Redraw the chart
+            // Destroy and redraw the chart
             if (chart) chart.destroy();
-            chart = new Chart(ctx, {
-                type: 'line',
+            chart = new Chart(document.getElementById("failurePlot").getContext("2d"), {
+                type: "line",
                 data: {
-                    labels: sig3Values, // X-axis labels (σ3 values)
+                    labels: sig3Values,
                     datasets: [
-                        { label: 'Hoek-Brown', data: sig1HB, borderColor: 'red', borderWidth: 2, fill: false, tension: 0 },
-                        { label: 'Mohr-Coulomb', data: sig1MC, borderColor: 'blue', borderWidth: 2, fill: false, tension: 0 }
+                        { label: "Hoek-Brown", data: sig1HB, borderColor: "red", borderWidth: 2, fill: false, tension: 0 },
+                        { label: "Mohr-Coulomb", data: sig1MC, borderColor: "blue", borderWidth: 2, fill: false, tension: 0 }
                     ]
                 },
                 options: {
-                    responsive: true, // Responsive and dynamic sizing
-                    maintainAspectRatio: false,
+                    responsive: true,
+                    maintainAspectRatio: true,
                     scales: {
                         x: {
-                            title: { display: true, text: 'σ3 (MPa)' },
-                            ticks: {
-                                callback: integerTickFormatter, // No decimals on labels
-                            }
+                            title: { display: true, text: "σ3 (MPa)" },
+                            ticks: { callback: integerTickFormatter },
                         },
                         y: {
-                            title: { display: true, text: 'σ1 (MPa)' },
-                            min: 0, // No negative y-axis values
-                            ticks: {
-                                callback: integerTickFormatter // No decimals on labels
-                            }
+                            title: { display: true, text: "σ1 (MPa)" },
+                            min: 0,
+                            ticks: { callback: integerTickFormatter },
                         }
                     }
                 }
