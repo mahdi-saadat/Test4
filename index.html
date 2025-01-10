@@ -76,6 +76,14 @@
             return nfi * sig3 + 2 * c * Math.sqrt(nfi);
         }
 
+        function sigma_cm_and_c_and_phi(sigma_3, sigC, m, s, a) {
+            const nfi = 1 + a * m * Math.pow(m * (sigma_3 / sigC) + s, a - 1);
+            const phi = (2 * Math.atan(Math.sqrt(nfi)) - Math.PI / 2) * (180 / Math.PI); // Convert to degrees
+            const c = (1 / (2 * Math.sqrt(nfi))) * (((1 - nfi) * sigma_3) + (sigC * Math.pow(m * (sigma_3 / sigC) + s, a)));
+            const sigma_cm = 2 * c * Math.sqrt(nfi);
+            return { nfi, phi, c, sigma_cm };
+        }
+
         function runCalculations() {
             // Gather inputs
             const UCSi = parseFloat(document.getElementById('UCSi').value);
@@ -84,15 +92,19 @@
             const D = parseFloat(document.getElementById('D').value);
             const density = parseFloat(document.getElementById('density').value);
             const depth = parseFloat(document.getElementById('depth').value);
-            const sigma_3 = density * depth;
+            const sigma_3 = density * depth; // Overburden pressure
 
             // Calculate HB parameters mb, s, a
             const mb = mi * Math.exp((GSI - 100) / 28 - 14 * D);
             const s = Math.exp((GSI - 100) / 9 - 3 * D);
             const a = 0.5 + 1 / 6 * (Math.exp(-GSI / 15.0) - Math.exp(-20.0 / 3.0));
 
+            // Calculate MC parameters
+            const mcResults = sigma_cm_and_c_and_phi(sigma_3, UCSi, mb, s, a); // {nfi, phi, c, sigma_cm}
+
             // Update results display
             document.getElementById('hbParams').innerText = `mb = ${mb.toFixed(2)}, s = ${s.toFixed(4)}, a = ${a.toFixed(3)}`;
+            document.getElementById('mcParams').innerText = `Cohesion (c) = ${mcResults.c.toFixed(2)} MPa, Friction Angle (phi) = ${mcResults.phi.toFixed(2)}°`;
 
             // Generate data for plotting
             const sig3Values = [];
@@ -126,7 +138,7 @@
             });
         }
 
-        runCalculations();
+        runCalculations(); // Run initial calculations on page load
     </script>
 </body>
 </html>
