@@ -6,26 +6,55 @@
     <title>Hoek-Brown vs Mohr-Coulomb Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .input-group {
-            margin-bottom: 10px;
-        }
-        #failurePlotDiv {
-            width: 100%; /* Dynamic width to fit the container */
-            margin: 0 auto; /* Center the plot */
-        }
-        canvas {
-            display: block;
-            max-width: 100%;
-            max-height: 100%;
-        }
-        #parameters, #results {
-            margin-top: 20px;
-        }
-    </style>
+    /* General body styling for a clean look */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* Input groups styling */
+    .input-group {
+        margin-bottom: 10px;
+    }
+
+    /* Chart container styling */
+    #failurePlotDiv {
+        width: 100%; /* Make the container responsive */
+        max-width: 800px; /* Add a max-width to prevent stretching too far on large screens */
+        margin: 0 auto; /* Center the container horizontally */
+        padding: 10px; /* Optional padding for spacing */
+    }
+
+    /* Canvas styling for responsiveness */
+    canvas {
+        display: block; /* Ensures the canvas behaves as a block element */
+        max-width: 100%; /* Allow the chart to scale within the container */
+        height: auto; /* Maintain aspect ratio dynamically */
+    }
+
+    /* Parameters and results spacing */
+    #parameters,
+    #results {
+        margin-top: 20px;
+    }
+
+    /* Button styling for better usability */
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+        background-color: #007bff; /* Professional blue color */
+        color: white;
+        border-radius: 5px;
+    }
+
+    button:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+    }
+</style>
 </head>
 <body>
     <h1>Hoek-Brown vs Mohr-Coulomb Calculator</h1>
