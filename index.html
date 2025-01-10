@@ -195,7 +195,14 @@
                     scales: {
                         x: {
                             title: { display: true, text: "σ3 (MPa)", font: { size: 14, weight: "bold" } },
-                            ticks: { autoSkip: true, maxTicksLimit: 15, font: { size: 12 } },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 15,
+                                font: { size: 12 },
+                                callback: function(value, index, values) {
+                                    return Math.round(value);  // Ensure tick values are integers
+                                }
+                            },
                             grid: { color: "#e0e0e0" }
                         },
                         y: {
